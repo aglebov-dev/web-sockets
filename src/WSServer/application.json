@@ -1,0 +1,9 @@
+{
+  "Uri": "http://+:8085",
+  "Connections": {
+    "BufferSize": 4096
+  },
+  "ProcessesJob": {
+    "Interval":  "00:00:01"
+  }
+}
