@@ -8,7 +8,7 @@ using WSServer.Contracts;
 
 namespace WSServer.Jobs
 {
-    internal class ProcessesJob: IJob
+    internal class ProcessesJob : IJob
     {
         private readonly ProcessesJobSettings _settings;
         private readonly IListener _listener;
@@ -23,7 +23,7 @@ namespace WSServer.Jobs
         {
             while (!token.IsCancellationRequested)
             {
-                var processes = GetInfo().ToArray();
+                var processes = GetInfo().OrderByDescending(x => x.Cpu).ToArray();
                 var json = System.Text.Json.JsonSerializer.Serialize(processes, Common.JsonSerializerOptions);
                 await _listener.SendBroadcastMessage(json);
                 await Task.Delay(_settings.Interval, token);
@@ -46,7 +46,7 @@ namespace WSServer.Jobs
                         Cpu = cpu,
                         Memory = process.PagedMemorySize64,
                         Time = time,
-                        User = "process.StartInfo.FileName"
+                        User = "unknown"
                     };
                 }
                 catch { }

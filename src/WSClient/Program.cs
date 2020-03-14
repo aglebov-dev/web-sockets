@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using WSClient.UI;
 using WSServer.Contracts;
 
 namespace WSClient
@@ -13,24 +14,42 @@ namespace WSClient
     class Program
     {
         private static JsonSerializerOptions _jsonOptions;
-        private static Dictionary<int, Process> _state;
+        private static Rectangle _size;
+        private static UI.Table _table;
 
         static void Main(string[] args)
         {
-            _jsonOptions = new System.Text.Json.JsonSerializerOptions();
+            _jsonOptions = new JsonSerializerOptions();
             _jsonOptions.Converters.Add(new TimeSpanConverter());
-            _state = new Dictionary<int, Process>();
+            _size = new Rectangle(Console.WindowWidth - 2, Console.WindowHeight - 2);
+            _table = new Table();
+            
+            var headers = new[]
+            {
+                new TableHeader(10, nameof(Process.Pid),    UI.Binding.Create<Process>(x => x.Pid.ToString())),
+                new TableHeader(40, nameof(Process.Name),   UI.Binding.Create<Process>(x => x.Name)),
+                new TableHeader(20, nameof(Process.User),   UI.Binding.Create<Process>(x => x.User)),
+                new TableHeader(10, nameof(Process.Cpu),    UI.Binding.Create<Process>(x => x.Cpu.ToString("n2"))),
+                new TableHeader(15, nameof(Process.Memory), UI.Binding.Create<Process>(x => x.Memory.ToString("n0"))),
+                new TableHeader(10, nameof(Process.Time),   UI.Binding.Create<Process>(x => x.Time.ToString("hh\\:mm\\:ss")))
+            };
 
-            ConnectAsync()
+            foreach (var header in headers)
+            {
+                _table.Headers.Add(header);
+            }
+
+            var uri = args?.FirstOrDefault() ?? "ws://localhost:8087/";
+            ConnectAsync(uri)
                 .GetAwaiter()
                 .GetResult();
         }
 
-        private static async Task ConnectAsync()
+        private static async Task ConnectAsync(string uri)
         {
             var client = new ClientWebSocket();
             var token = CancellationToken.None;
-            await client.ConnectAsync(new Uri("ws://localhost:8085/"), token);
+            await client.ConnectAsync(new Uri(uri), token);
             if (client.State == WebSocketState.Open)
             {
                 var parts = new LinkedList<byte[]>();
@@ -51,7 +70,7 @@ namespace WSClient
             var response = await client.ReceiveAsync(new Memory<byte>(buffer), token);
             var array = new byte[response.Count];
             Array.Copy(buffer, 0, array, 0, array.Length);
-            
+
             parts.AddLast(array);
 
             if (response.EndOfMessage)
@@ -81,63 +100,14 @@ namespace WSClient
         {
             var json = Encoding.UTF8.GetString(message);
             var data = JsonSerializer.Deserialize<Process[]>(json, _jsonOptions)
-                .OrderBy(x => x.Pid)
-                .ToArray();
+                .OrderByDescending(x => x.Cpu)
+                .ToList();
 
-            var dictionary = data.ToLookup(x => x.Pid);
-            var update = data.Where(x => _state.ContainsKey(x.Pid));
-            var remove = _state.Where(x => !dictionary.Contains(x.Key));
-            var add = data.Except(update).ToLookup(x => x.Pid);
+            _table.DataSource = data;
 
-            foreach (var item in remove)
-            {
-                _state.Remove(item.Key);
-            }
-
-            foreach (var item in add)
-            {
-                _state.Add(item.Key, item.First());
-            }
-
-            foreach (var item in update)
-            {
-                _state.Remove(item.Pid);
-            }
-
-            ReRender();
+            _table.PopulateData();
+            _table.EvaluateSize(_size);
+            _table.Render(new Point(0, 0), _size);
         }
-
-        private static void ReRender()
-        {
-            //Console.Clear();
-            //foreach (var process in data.OrderBy(x => x.Pid))
-            //{
-            //    Console.BufferWidth = 200;
-            //    Console.CursorLeft = 0;
-            //    Console.Write(process.Pid);
-
-            //    Console.CursorLeft = 10;
-            //    Console.Write(process.User.Substring(0, Math.Max(process.User.Length, 50)));
-
-            //    Console.CursorLeft = 65;
-            //    Console.Write(process.Name.Substring(0, 90));
-
-            //    Console.CursorLeft = 115;
-            //    Console.Write(process.Time.ToString("hh\\:mm\\:ss"));
-
-            //    Console.CursorLeft = 140;
-            //    Console.Write(process.Cpu.ToString("n2"));
-
-            //    Console.CursorLeft = 180;
-            //    Console.Write($"{process.Memory / 1024:n0} Kb");
-
-            //    Console.WriteLine();
-            //}
-        }
-
-       
-
-
-       
     }
 }

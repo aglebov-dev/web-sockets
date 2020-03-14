@@ -1,0 +1,17 @@
+**/.dockerignore
+**/.env
+**/.git
+**/.gitignore
+**/.gitattributes
+**/.vs
+**/.vscode
+Dockerfile
+**/tools
+**/.buildArtifacts
+**/.idea
+**/bin
+**/obj
+**/.toolstarget
+**/*.jfm
+**/*.dbmdl
+**/*.md

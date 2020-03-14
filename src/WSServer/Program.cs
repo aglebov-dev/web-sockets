@@ -15,6 +15,8 @@ namespace WSServer
     {
         static void Main(string[] args)
         {
+            Console.Clear();
+
             var cts = new CancellationTokenSource();
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
