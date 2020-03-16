@@ -23,38 +23,51 @@ namespace WSServer.Jobs
         {
             while (!token.IsCancellationRequested)
             {
-                var processes = GetInfo().OrderByDescending(x => x.Cpu).ToArray();
+                var processes = (await GetInfo()).Where(x => x != null);
                 var json = System.Text.Json.JsonSerializer.Serialize(processes, Common.JsonSerializerOptions);
                 await _listener.SendBroadcastMessage(json);
                 await Task.Delay(_settings.Interval, token);
             }
         }
 
-        private IEnumerable<Process> GetInfo()
+        private Task<Process[]> GetInfo()
         {
-            foreach (var process in System.Diagnostics.Process.GetProcesses())
-            {
-                var data = default(Process);
-                try
-                {
-                    var time = DateTime.UtcNow - process.StartTime.ToUniversalTime();
-                    var cpu = 100 * process.TotalProcessorTime / time;
-                    data = new Process
-                    {
-                        Pid = process.Id,
-                        Name = process.ProcessName,
-                        Cpu = cpu,
-                        Memory = process.PagedMemorySize64,
-                        Time = time,
-                        User = "unknown"
-                    };
-                }
-                catch { }
+            var tasks = System.Diagnostics.Process.GetProcesses()
+                .Select(X)
+                .ToArray();
 
-                if (data != null)
+            return Task.WhenAll(tasks);
+
+        }
+
+        private async Task<Process>  X(System.Diagnostics.Process process)
+        {
+            try
+            {
+                var startTime = DateTime.UtcNow;
+                var startCpuUsage = process.TotalProcessorTime;
+                await Task.Delay(100);
+
+                var endTime = DateTime.UtcNow;
+                var endCpuUsage = process.TotalProcessorTime;
+                var cpuUsedMs = (endCpuUsage - startCpuUsage).TotalMilliseconds;
+                var totalMsPassed = (endTime - startTime).TotalMilliseconds;
+                var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
+                var cpu = cpuUsageTotal * 100;
+
+                return new Process
                 {
-                    yield return data;
-                }
+                    Pid = process.Id,
+                    Name = process.ProcessName,
+                    Cpu = cpu,
+                    Memory = process.PagedMemorySize64,
+                    Time = DateTime.UtcNow - process.StartTime.ToUniversalTime(),
+                    User = "unknown"
+                };
+            }
+            catch
+            {
+                return default;
             }
         }
     }

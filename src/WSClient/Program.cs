@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
@@ -19,19 +20,21 @@ namespace WSClient
 
         static void Main(string[] args)
         {
+            Console.Clear();
+            Console.CursorVisible = false;
             _jsonOptions = new JsonSerializerOptions();
             _jsonOptions.Converters.Add(new TimeSpanConverter());
             _size = new Rectangle(Console.WindowWidth - 2, Console.WindowHeight - 2);
             _table = new Table();
-            
+
             var headers = new[]
             {
-                new TableHeader(10, nameof(Process.Pid),    UI.Binding.Create<Process>(x => x.Pid.ToString())),
+                new TableHeader(10, nameof(Process.Pid),    UI.Binding.Create<Process>(x => x.Pid.ToString())) { Alignment = Alignment.Center },
                 new TableHeader(40, nameof(Process.Name),   UI.Binding.Create<Process>(x => x.Name)),
                 new TableHeader(20, nameof(Process.User),   UI.Binding.Create<Process>(x => x.User)),
-                new TableHeader(10, nameof(Process.Cpu),    UI.Binding.Create<Process>(x => x.Cpu.ToString("n2"))),
-                new TableHeader(15, nameof(Process.Memory), UI.Binding.Create<Process>(x => x.Memory.ToString("n0"))),
-                new TableHeader(10, nameof(Process.Time),   UI.Binding.Create<Process>(x => x.Time.ToString("hh\\:mm\\:ss")))
+                new TableHeader(10, nameof(Process.Cpu),    UI.Binding.Create<Process>(x => x.Cpu.ToString("n2"))) { Alignment = Alignment.Right },
+                new TableHeader(15, nameof(Process.Memory), UI.Binding.Create<Process>(x => x.Memory.ToString("n0", CultureInfo.CreateSpecificCulture("ru")))) { Alignment = Alignment.Right },
+                new TableHeader(11, nameof(Process.Time),   UI.Binding.Create<Process>(x => x.Time.ToString("hh\\:mm\\:ss"))) { Alignment = Alignment.Center }
             };
 
             foreach (var header in headers)

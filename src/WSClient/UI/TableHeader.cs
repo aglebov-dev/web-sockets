@@ -2,11 +2,19 @@
 
 namespace WSClient.UI
 {
+    public enum Alignment
+    {
+        Left,
+        Right,
+        Center
+    }
+
     public class TableHeader : IControl
     {
         private readonly Binding _binding;
         public int Width { get; }
         public string Title { get; }
+        public Alignment Alignment { get; set; }
         public Rectangle RequiredSize { get; private set; }
         public Rectangle RenderSize { get; private set; }
 
@@ -47,8 +55,13 @@ namespace WSClient.UI
                 {
                     var length = Math.Min(textWidth, Title.Length - stringOffset);
                     var line = Title.Substring(stringOffset, length);
+                    var alignmentOffset = Alignment == Alignment.Right 
+                        ? textWidth - line.Length 
+                        : Alignment == Alignment.Center
+                            ? (textWidth - line.Length) / 2
+                            : 0;
 
-                    Console.CursorLeft = possition.X;
+                    Console.CursorLeft = possition.X + alignmentOffset;
                     Console.CursorTop = y;
                     Console.Write(line);
 
