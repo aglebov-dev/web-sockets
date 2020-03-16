@@ -39,7 +39,7 @@ namespace WSClient
                 _table.Headers.Add(header);
             }
 
-            var uri = args?.FirstOrDefault() ?? "ws://localhost:8085/";
+            var uri = args?.FirstOrDefault() ?? "ws://localhost:47055/";
             ConnectAsync(uri)
                 .GetAwaiter()
                 .GetResult();
