@@ -1,3 +1,8 @@
+## Что надо исправить:
+Обработку ошибки когда у приложения нет прав на открытие порта
+Когда нет активных соединений не гонять впустую сбор данных о процесах
+
+
 ## App
 
 `Attention: his application is a test task, so you should not use it in product development`
