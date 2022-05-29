@@ -1,11 +1,9 @@
-## Что надо исправить:
-Обработку ошибки когда у приложения нет прав на открытие порта
-Когда нет активных соединений не гонять впустую сбор данных о процесах
-
-
 ## App
 
 `Attention: his application is a test task, so you should not use it in product development`
+
+The application is an implementation of a test task for creating a client-server application based on interaction via web sockets.
+The main condition for the implementation of the task was a ban on the use of third-party libraries (you could only use the standard library), but this does not prevent you from using aspnet core
 
 ### Description:
 
